@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AR Флаг</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.min.js"></script>
+</head>
+<body>
+    <!-- Сцена Меню -->
+    <div id="scene-menu" class="scene active">
+        <div class="menu-content">
+            <h1>AR Флаг</h1>
+            <p class="description">Наведите камеру на маркер MarkerVacnecov</p>
+            <button class="start-btn" onclick="switchToAR()">
+                Запустить AR
+            </button>
+        </div>
+    </div>
+
+    <!-- Сцена AR -->
+    <div id="scene-ar" class="scene">
+        <button class="back-btn" onclick="switchToMenu()">
+            ← Назад
+        </button>
+        
+        <a-scene 
+            embedded 
+            arjs="sourceType: webcam; debugUIEnabled: false;"
+            renderer="logarithmicDepthBuffer: true; precision: medium;"
+            vr-mode-ui="enabled: false"
+            id="ar-scene">
+            
+            <a-assets>
+                <img id="flag-sprite" src="assets/sprites/Flag.png">
+            </a-assets>
+            
+            <!-- Маркер -->
+            <a-marker 
+                id="vacnecov-marker"
+                type="pattern" 
+                url="assets/markers/MarkerVacnecov.patt"
+                smooth="true"
+                smoothCount="10"
+                smoothTolerance="0.01">
+                
+                <!-- Флаг -->
+                <a-image 
+                    id="flag-element"
+                    src="#flag-sprite"
+                    position="0 0.5 0"
+                    scale="0.3 0.3 0.3"
+                    rotation="-90 0 0"
+                    look-at="[camera]">
+                </a-image>
+            </a-marker>
+            
+            <!-- Камера -->
+            <a-entity camera></a-entity>
+        </a-scene>
+        
+        <div class="ar-hint">
+            Наведите на маркер MarkerVacnecov
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
