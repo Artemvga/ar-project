@@ -13,7 +13,7 @@
     <title>AR Project</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=1.0.1">
+    <link rel="stylesheet" href="css/style.css?v=1.0.2">
 </head>
 <body>
     <!-- Сцена 1: Стартовый экран -->
@@ -35,7 +35,6 @@
             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
             renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
             vr-mode-ui="enabled: false"
-            gesture-detector
             loading-screen="enabled: false">
             
             <!-- Ассеты -->
@@ -49,24 +48,32 @@
                 preset="custom"
                 url="assets/markers/MarkerVacnecov.patt"
                 emitevents="true"
-                id="markerVacnecov">
+                id="markerVacnecov"
+                cursor="rayOrigin: mouse"
+                raycaster="objects: .clickable;"
+                visible="false">
                 
-                <!-- Спрайт флага по центру маркера с кликабельностью -->
+                <!-- Спрайт флага по центру маркера -->
                 <a-image
                     src="#flag"
-                    position="0 0 0"
+                    position="0 0.001 0"
                     rotation="-90 0 0"
                     scale="1 1 1"
-                    transparent="true"
-                    alpha-test="0.5"
-                    material="shader: flat; side: double"
                     class="clickable"
-                    id="flagSprite">
+                    id="flagSprite"
+                    material="transparent: true; alphaTest: 0.5">
                 </a-image>
+                
+                <!-- Курсор для взаимодействия -->
+                <a-entity cursor="rayOrigin: mouse" raycaster="objects: .clickable"></a-entity>
             </a-marker>
 
-            <!-- Камера -->
-            <a-entity camera look-controls="enabled: false"></a-entity>
+            <!-- Статическая камера -->
+            <a-entity id="camera" camera="userHeight: 0;" look-controls="enabled: false"></a-entity>
+            
+            <!-- Raycaster для обнаружения объектов -->
+            <a-entity id="mouseCursor" cursor="rayOrigin: mouse" 
+                     raycaster="objects: .clickable; far: 1000"></a-entity>
         </a-scene>
 
         <!-- Инструкция -->
@@ -98,6 +105,6 @@
         <div class="panel-overlay" id="panelOverlay"></div>
     </div>
 
-    <script src="js/main.js?v=1.0.1"></script>
+    <script src="js/main.js?v=1.0.2"></script>
 </body>
 </html>

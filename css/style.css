@@ -10,6 +10,7 @@ body {
     width: 100vw;
     height: 100vh;
     position: fixed;
+    background: #000;
 }
 
 /* ============================================
@@ -74,6 +75,8 @@ body {
 .ar-scene {
     width: 100%;
     height: 100%;
+    position: relative;
+    overflow: hidden;
 }
 
 /* ============================================
@@ -85,7 +88,7 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -121,7 +124,7 @@ body {
     bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.85);
     color: white;
     padding: 15px 25px;
     border-radius: 25px;
@@ -130,6 +133,8 @@ body {
     text-align: center;
     max-width: 90%;
     transition: opacity 0.3s ease;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .instruction.hidden {
@@ -241,12 +246,13 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.7);
     z-index: 199;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
     display: none;
+    backdrop-filter: blur(3px);
 }
 
 .panel-overlay.active {
@@ -256,15 +262,83 @@ body {
 }
 
 /* ============================================
-   ФИКС ДЛЯ A-FRAME
+   ФИКСЫ ДЛЯ A-FRAME И AR.js
    ============================================ */
 a-scene {
-    width: 100%;
-    height: 100%;
+    width: 100% !important;
+    height: 100% !important;
+    display: block !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
 }
 
-.clickable {
-    cursor: pointer;
+/* Гарантируем, что только флаг кликабельный */
+#flagSprite {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 10 !important;
+}
+
+/* Убираем все лишние белые/прозрачные элементы */
+.a-canvas,
+.a-enter-vr,
+.aframe-inspector-enabled,
+.a-enter-ar,
+.a-orientation-modal,
+.a-loader-title,
+.a-enter-vr-button,
+.a-enter-ar-button {
+    display: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Убираем все курсоры и лучевые указатели, кроме нашего */
+[a-cursor],
+[cursor],
+[raycaster] {
+    pointer-events: none !important;
+}
+
+/* Исключение для конкретных элементов */
+#flagSprite + [cursor],
+#flagSprite + [raycaster] {
+    pointer-events: none !important;
+    display: none !important;
+}
+
+/* Скрываем AR.js overlay */
+.arjs-loader,
+.arjs-video,
+.relative,
+.absolute {
+    position: relative !important;
+}
+
+/* Фикс для прозрачных overlay */
+[style*="opacity: 0"],
+[style*="visibility: hidden"],
+[visible="false"] {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+/* Стили для маркера */
+a-marker {
+    position: relative;
+}
+
+/* Убедимся, что ничего лишнего не перекрывает флаг */
+a-marker > *:not(#flagSprite) {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+/* Обеспечиваем, что другие элементы не перехватывают клики */
+body > *:not(#scene1):not(#scene2):not(.loading-overlay) {
+    pointer-events: none !important;
 }
 
 /* ============================================
@@ -277,6 +351,12 @@ a-scene {
     
     .info-panel-content {
         max-height: calc(80vh - 80px);
+    }
+    
+    .instruction {
+        bottom: 15px;
+        font-size: 13px;
+        padding: 12px 20px;
     }
 }
 
@@ -292,4 +372,78 @@ a-scene {
     .info-panel.active {
         bottom: 20px;
     }
+    
+    .instruction {
+        max-width: 500px;
+        font-size: 16px;
+    }
+}
+
+/* ============================================
+   СПЕЦИАЛЬНЫЕ ФИКСЫ ДЛЯ МОБИЛЬНЫХ
+   ============================================ */
+/* Предотвращаем выделение текста при тапах */
+* {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Фикс для iOS Safari */
+@supports (-webkit-touch-callout: none) {
+    body {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    a-scene {
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+    }
+}
+
+/* Фикс для Android */
+@supports (-webkit-touch-callout: none) and (not (-webkit-overflow-scrolling: touch)) {
+    body {
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+/* Гарантируем черный фон для AR сцены */
+.a-canvas,
+canvas {
+    background: #000 !important;
+    display: block !important;
+}
+
+/* Убираем любые белые границы */
+html, body, a-scene, .a-canvas {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+}
+
+/* Делаем флаг видимым поверх всего */
+#flagSprite {
+    position: relative !important;
+    z-index: 1000 !important;
+}
+
+/* Убираем все возможные overlay от AR.js */
+.arjs-video,
+.video-container,
+.relative-video,
+.absolute-video {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    z-index: 1 !important;
 }

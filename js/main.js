@@ -11,9 +11,6 @@ const panelOverlay = document.getElementById('panelOverlay');
 const closePanel = document.getElementById('closePanel');
 const backButton = document.getElementById('backButton');
 
-let arScene = null;
-let flagSprite = null;
-
 // ============================================
 // ПЕРЕХОД МЕЖДУ СЦЕНАМИ
 // ============================================
@@ -24,7 +21,7 @@ startButton.addEventListener('click', async () => {
 
     // Небольшая задержка для инициализации AR
     setTimeout(() => {
-        arScene = document.querySelector('a-scene');
+        const arScene = document.querySelector('a-scene');
         
         if (arScene) {
             // Ждем загрузки AR.js
@@ -50,23 +47,31 @@ startButton.addEventListener('click', async () => {
 // ИНИЦИАЛИЗАЦИЯ AR ВЗАИМОДЕЙСТВИЙ
 // ============================================
 function initARInteractions() {
-    flagSprite = document.getElementById('flagSprite');
+    const flagSprite = document.getElementById('flagSprite');
     const marker = document.getElementById('markerVacnecov');
 
-    // Обработка клика по флагу
+    // Удаляем все старые обработчики
     if (flagSprite) {
-        flagSprite.addEventListener('click', (evt) => {
+        // Очищаем старые обработчики
+        const newFlag = flagSprite.cloneNode(true);
+        flagSprite.parentNode.replaceChild(newFlag, flagSprite);
+        
+        // Получаем обновленный элемент
+        const updatedFlag = document.getElementById('flagSprite');
+        
+        // Добавляем простой обработчик клика
+        updatedFlag.addEventListener('click', (evt) => {
+            console.log('Клик по флагу!');
             evt.stopPropagation();
             openInfoPanel();
         });
-
-        // Альтернативный способ клика через raycaster
-        flagSprite.addEventListener('raycaster-intersected', () => {
-            flagSprite.classList.add('hovered');
-        });
-
-        flagSprite.addEventListener('raycaster-intersected-cleared', () => {
-            flagSprite.classList.remove('hovered');
+        
+        // Для мобильных устройств
+        updatedFlag.addEventListener('touchstart', (evt) => {
+            console.log('Тап по флагу!');
+            evt.stopPropagation();
+            openInfoPanel();
+            evt.preventDefault();
         });
     }
 
@@ -84,25 +89,42 @@ function initARInteractions() {
         });
     }
 
-    // Добавляем компонент для обработки кликов в A-Frame
-    AFRAME.registerComponent('cursor-listener', {
-        init: function () {
-            this.el.addEventListener('click', function (evt) {
-                openInfoPanel();
-            });
+    // Устанавливаем режим взаимодействия
+    setupRaycaster();
+}
+
+// ============================================
+// НАСТРОЙКА RAYCASTER ДЛЯ ОБНАРУЖЕНИЯ КЛИКОВ
+// ============================================
+function setupRaycaster() {
+    const scene = document.querySelector('a-scene');
+    if (!scene) return;
+
+    // Создаем простой курсор для кликов
+    const cursor = document.createElement('a-entity');
+    cursor.setAttribute('cursor', 'rayOrigin: mouse');
+    cursor.setAttribute('raycaster', 'objects: .clickable; far: 1000');
+    
+    const camera = document.querySelector('[camera]');
+    if (camera) {
+        camera.appendChild(cursor);
+    }
+
+    // Обработка кликов через raycaster
+    scene.addEventListener('click', (evt) => {
+        const intersectedEl = evt.detail.intersectedEl;
+        if (intersectedEl && intersectedEl.classList.contains('clickable')) {
+            console.log('Клик через raycaster');
+            openInfoPanel();
         }
     });
-
-    // Применяем компонент к флагу
-    if (flagSprite) {
-        flagSprite.setAttribute('cursor-listener', '');
-    }
 }
 
 // ============================================
 // УПРАВЛЕНИЕ ИНФОРМАЦИОННОЙ ПАНЕЛЬЮ
 // ============================================
 function openInfoPanel() {
+    console.log('Открытие панели');
     infoPanel.classList.add('active');
     panelOverlay.classList.add('active');
     instruction.classList.add('hidden');
@@ -123,11 +145,6 @@ function closeInfoPanel() {
 closePanel.addEventListener('click', closeInfoPanel);
 panelOverlay.addEventListener('click', closeInfoPanel);
 backButton.addEventListener('click', closeInfoPanel);
-
-// ============================================
-// ОБРАБОТКА КЛИКОВ НА КНОПКИ В ПАНЕЛИ
-// ============================================
-// Удалено - кнопки убраны из интерфейса
 
 // ============================================
 // ПРЕДОТВРАЩЕНИЕ МАСШТАБИРОВАНИЯ НА iOS
@@ -155,71 +172,7 @@ document.addEventListener('touchend', (e) => {
 }, false);
 
 // ============================================
-// КОМПОНЕНТ A-FRAME ДЛЯ ОБРАБОТКИ КЛИКОВ
-// ============================================
-AFRAME.registerComponent('clickable', {
-    init: function () {
-        this.el.addEventListener('mousedown', (evt) => {
-            console.log('Клик по объекту');
-        });
-    }
-});
-
-// ============================================
-// ДОПОЛНИТЕЛЬНЫЙ RAYCASTER ДЛЯ МОБИЛЬНЫХ
-// ============================================
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(() => {
-        const sceneEl = document.querySelector('a-scene');
-        if (sceneEl && sceneEl.hasLoaded) {
-            setupMobileRaycaster();
-        } else if (sceneEl) {
-            sceneEl.addEventListener('loaded', setupMobileRaycaster);
-        }
-    }, 2000);
-});
-
-function setupMobileRaycaster() {
-    const camera = document.querySelector('[camera]');
-    const flag = document.getElementById('flagSprite');
-    
-    if (!camera || !flag) return;
-
-    // Создаем raycaster для обнаружения кликов
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    document.addEventListener('touchstart', (event) => {
-        if (event.touches.length > 0 && !infoPanel.classList.contains('active')) {
-            const touch = event.touches[0];
-            
-            // Нормализуем координаты
-            mouse.x = (touch.clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(touch.clientY / window.innerHeight) * 2 + 1;
-
-            // Получаем камеру Three.js
-            const threeCamera = camera.getObject3D('camera');
-            if (!threeCamera) return;
-
-            raycaster.setFromCamera(mouse, threeCamera);
-
-            // Получаем объект Three.js флага
-            const flagObject = flag.object3D;
-            if (!flagObject) return;
-
-            // Проверяем пересечение
-            const intersects = raycaster.intersectObject(flagObject, true);
-
-            if (intersects.length > 0) {
-                console.log('Клик по флагу через raycaster!');
-                openInfoPanel();
-            }
-        }
-    }, false);
-}
-
-// ============================================
-// ЛОГИРОВАНИЕ ДЛЯ ОТЛАДКИ
+// ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
 // ============================================
 console.log('AR Project initialized');
 console.log('Ready for AR experience');
