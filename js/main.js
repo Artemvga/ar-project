@@ -1,118 +1,107 @@
-// ============================================
-// ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ
-// ============================================
-const scene1 = document.getElementById('scene1');
-const scene2 = document.getElementById('scene2');
-const startButton = document.getElementById('startButton');
-const loadingOverlay = document.getElementById('loadingOverlay');
-const instruction = document.getElementById('instruction');
-const infoPanel = document.getElementById('infoPanel');
-const panelOverlay = document.getElementById('panelOverlay');
-const closePanel = document.getElementById('closePanel');
+// Глобальный объект для управления состоянием
+window.ARApp = {
+  isMarkerVisible: false,
 
-let arScene = null;
-let flagSprite = null;
+  // Инициализация приложения
+  init() {
+    this.bindEvents();
+  },
 
-// ============================================
-// ПЕРЕХОД МЕЖДУ СЦЕНАМИ
-// ============================================
-startButton.addEventListener('click', () => {
-    scene1.classList.add('hidden');
-    scene2.classList.add('active');
-    loadingOverlay.classList.remove('hidden');
+  // Привязка событий
+  bindEvents() {
+    document.getElementById('startArButton').addEventListener('click', () => {
+      this.startAR();
+    });
 
-    // Отложим инициализацию, чтобы A-Frame успел создать сцену
-    setTimeout(() => {
-        arScene = document.querySelector('a-scene');
-        if (arScene) {
-            if (arScene.hasLoaded) {
-                initARInteractions();
-                hideLoading();
-            } else {
-                arScene.addEventListener('loaded', () => {
-                    initARInteractions();
-                    hideLoading();
-                });
-            }
-        }
-    }, 600);
-});
+    // Добавляем обработчики для маркера через A-Frame
+    const scene = document.querySelector('a-scene');
+    if (scene) {
+      scene.addEventListener('marker-found', (e) => {
+        this.onMarkerFound(e);
+      });
+      scene.addEventListener('marker-lost', (e) => {
+        this.onMarkerLost(e);
+      });
+    }
 
-function hideLoading() {
-    setTimeout(() => {
-        loadingOverlay.classList.add('hidden');
-    }, 800);
-}
+    // Обработка клика по флагу и панели
+    document.addEventListener('click', (e) => {
+      // Если клик не по флагу или панели — закрываем панель
+      if (
+        !e.target.closest('#flagSprite') &&
+        !e.target.closest('#infoPanel') &&
+        this.isPanelVisible()
+      ) {
+        this.hidePanel();
+      }
+    });
+  },
 
-// ============================================
-// ИНИЦИАЛИЗАЦИЯ AR ВЗАИМОДЕЙСТВИЙ
-// ============================================
-function initARInteractions() {
-    flagSprite = document.getElementById('flagSprite');
-    const marker = document.getElementById('markerVacnecov');
+  // Запуск AR-сцены
+  startAR() {
+    const scene1 = document.getElementById('scene1');
+    const scene2 = document.getElementById('scene2');
 
-    // Клик по флагу — только через A-Frame событие
+    if (scene1 && scene2) {
+      scene1.style.display = 'none';
+      scene2.style.display = 'flex';
+
+      // Запуск AR.js (если нужно)
+      this.initARScene();
+    }
+  },
+
+  // Инициализация AR-сцены (опционально)
+  initARScene() {
+    // Можно добавить логику, если нужно что-то инициализировать после старта
+    console.log('AR сцена запущена');
+  },
+
+  // Обработчик: маркер найден
+  onMarkerFound(event) {
+    const flagSprite = document.getElementById('flagSprite');
     if (flagSprite) {
-        flagSprite.addEventListener('click', (evt) => {
-            evt.stopPropagation();
-            openInfoPanel();
-        });
+      flagSprite.setAttribute('visible', true);
+      this.isMarkerVisible = true;
     }
+  },
 
-    // Обработка появления/исчезновения маркера
-    if (marker) {
-        marker.addEventListener('markerFound', () => {
-            instruction.textContent = 'Нажмите на флаг';
-        });
-
-        marker.addEventListener('markerLost', () => {
-            instruction.textContent = 'Наведите камеру на маркер';
-            closeInfoPanel();
-        });
+  // Обработчик: маркер потерян
+  onMarkerLost(event) {
+    const flagSprite = document.getElementById('flagSprite');
+    if (flagSprite) {
+      flagSprite.setAttribute('visible', false);
+      this.isMarkerVisible = false;
+      this.hidePanel(); // Также скрываем панель
     }
-}
+  },
 
-// ============================================
-// УПРАВЛЕНИЕ ИНФОРМАЦИОННОЙ ПАНЕЛЬЮ
-// ============================================
-function openInfoPanel() {
-    infoPanel.classList.add('active');
-    panelOverlay.classList.add('active');
-    instruction.classList.add('hidden');
+  // Показать панель
+  showPanel() {
+    if (!this.isMarkerVisible) return;
 
-    if (navigator.vibrate) {
-        navigator.vibrate(50);
+    const panel = document.getElementById('infoPanel');
+    if (panel) {
+      panel.setAttribute('visible', true);
     }
-}
+  },
 
-function closeInfoPanel() {
-    infoPanel.classList.remove('active');
-    panelOverlay.classList.remove('active');
-    instruction.classList.remove('hidden');
-}
+  // Скрыть панель
+  hidePanel() {
+    const panel = document.getElementById('infoPanel');
+    if (panel) {
+      panel.setAttribute('visible', false);
+    }
+  },
 
-// Обработчики закрытия
-closePanel.addEventListener('click', closeInfoPanel);
-panelOverlay.addEventListener('click', closeInfoPanel);
+  // Проверка видимости панели
+  isPanelVisible() {
+    const panel = document.getElementById('infoPanel');
+    return panel && panel.getAttribute('visible') === 'true';
+  }
+};
 
-// ============================================
-// ЗАПРЕТ ЖЕСТОВ МАСШТАБИРОВАНИЯ НА iOS
-// ============================================
-['gesturestart', 'gesturechange', 'gestureend'].forEach(event => {
-    document.addEventListener(event, e => e.preventDefault());
+// Запуск приложения при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+  window.ARApp.init();
 });
-
-// Фикс двойного тапа
-let lastTouchEnd = 0;
-document.addEventListener('touchend', e => {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
-        e.preventDefault();
-    }
-    lastTouchEnd = now;
-}, { passive: false });
-
-// ============================================
-// ЛОГ
-// ============================================
-console.log('AR Project v1.0.2 initialized');
