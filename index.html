@@ -1,86 +1,82 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    
-    <title>AR Project</title>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
-    <link rel="stylesheet"text/css" rel="stylesheet" href="css/style.css?v=1.0.3">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AR Project</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <!-- AR.js (старая, но стабильная версия для pattern-маркеров) -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <!-- Дополнительные скрипты для gesture-detector (если нужно) -->
+  <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
 </head>
 <body>
-    <!-- Сцена 1: Стартовый экран -->
-    <div id="scene1">
-        <button class="start-button" id="startButton">Start AR</button>
-    </button>
+  <!-- Сцена 1: Начальный экран -->
+  <div id="scene1" class="scene">
+    <div class="center-button">
+      <button id="startArButton">Запустить AR</button>
     </div>
+  </div>
 
-    <!-- Индикатор загрузки -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div>Загрузка камеры...</div>
-    </div>
+  <!-- Сцена 2: AR сцена (скрыта изначально) -->
+  <div id="scene2" class="scene" style="display:none;">
+    <a-scene
+      vr-mode-ui="enabled: false"
+      loading-screen="enabled: false"
+      arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; maxDetectionRate: 30;"
+      embedded
+      gesture-detector
+      id="arScene"
+    >
+      <!-- Камера -->
+      <a-entity camera></a-entity>
 
-    <!-- Сцена 2: AR -->
-    <div id="scene2">
-        <a-scene
-            class="ar-scene"
-            embedded
-            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-            renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
-            vr-mode-ui="enabled: false"
-            gesture-detector
-            loading-screen="enabled: false">
-            
-            <a-assets>
-                <img id="flag" src="assets/sprites/Flag.png" crossorigin="anonymous">
-            </a-assets>
+      <!-- Маркер -->
+      <a-marker
+        id="vacnecovMarker"
+        type="pattern"
+        preset="custom"
+        url="./assets/markers/MarkerVacnecov.patt"
+        raycaster="objects: .clickable"
+        emitevents="true"
+        cursor="fuse: false; rayOrigin: mouse;"
+        on-marker-found="onMarkerFound"
+        on-marker-lost="onMarkerLost"
+      >
+        <!-- Спрайт флага (скрыт изначально) -->
+        <a-image
+          id="flagSprite"
+          src="./assets/images/Flag.png"
+          position="0 0 0"
+          scale="0.5 0.5 0.5"
+          visible="false"
+          class="clickable"
+          rotation="-90 0 0"
+          gesture-handler
+          onclick="window.ARApp.showPanel()"
+        ></a-image>
+      </a-marker>
 
-            <a-marker type="pattern" preset="custom" url="assets/markers/MarkerVacnecov.patt" id="markerVacnecov">
-                <a-image
-                    src="#flag"
-                    position="0 0 0"
-                    rotation="-90 0 0"
-                    scale="1 1 1"
-                    transparent="true"
-                    alpha-test="0.5"
-                    material="shader: flat; side: double"
-                    class="clickable"
-                    id="flagSprite">
-                </a-image>
-            </a-marker>
+      <!-- Панелька (скрыта изначально) -->
+      <a-entity
+        id="infoPanel"
+        position="0 0 0"
+        scale="0.7 0.7 0.7"
+        visible="false"
+        geometry="primitive: plane; width: 1.5; height: 1.2"
+        material="color: #ffffff; opacity: 0.95; side: double"
+        text="value: Информация о маркере\nНажмите чтобы закрыть; align: center; wrapCount: 20; color: #000; width: 1.3"
+        onclick="window.ARApp.hidePanel()"
+        class="clickable"
+      ></a-entity>
 
-            <a-entity camera look-controls="enabled: false"></a-entity>
-        </a-scene>
+    </a-scene>
+  </div>
 
-        <div class="instruction" id="instruction">Наведите камеру на маркер</div>
-
-        <div class="info-panel" id="infoPanel">
-            <div class="info-panel-header">
-                <h2>Информация о флаге</h2>
-                <button class="close-button" id="closePanel">×</button>
-            </div>
-            <div class="info-panel-content">
-                <p class="info-text">
-                    Здесь находится информация о флаге Вацнецова. 
-                    Вы можете добавить любой текст, описание, историческую справку или другую интересную информацию.
-                </p>
-                <p class="info-text">
-                    Этот флаг имеет особое значение и символизирует важные события.
-                </p>
-                <button class="back-button" id="backButton">Назад</button>
-            </div>
-        </div>
-
-        <div class="panel-overlay" id="panelOverlay"></div>
-    </div>
-
-    <script src="js/main.js?v=1.0.3"></script>
+  <!-- Подключаем основной скрипт -->
+  <script src="js/main.js"></script>
 </body>
 </html>

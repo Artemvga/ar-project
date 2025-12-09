@@ -1,195 +1,81 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    overflow: hidden;
-    width: 100vw;
-    height: 100vh;
-    position: fixed;
-    touch-action: manipulation;
+  font-family: Arial, sans-serif;
+  background: #000;
+  overflow: hidden;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-/* ==================== СЦЕНА 1 ==================== */
-#scene1 {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    position: fixed;
-    top: 0; left: 0;
-    z-index: 1000;
+.scene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  z-index: 1000;
 }
 
-#scene1.hidden { display: none; }
-
-.start-button {
-    padding: 20px 60px;
-    font-size: 24px;
-    font-weight: 600;
-    color: white;
-    background: rgba(255,255,255,0.2);
-    border: 3px solid white;
-    border-radius: 50px;
-    cursor: pointer;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-    text-transform: uppercase;
-    letter-spacing: 2px;
+.center-button {
+  text-align: center;
 }
 
-.start-button:active { transform: scale(0.95); }
-
-/* ==================== СЦЕНА 2 ==================== */
-#scene2 { display: none; width: 100%; height: 100%; position: fixed; top: 0; left: 0; }
-#scene2.active { display: block; }
-
-.ar-scene { width: 100%; height: 100%; }
-
-/* ==================== ЗАГРУЗКА ==================== */
-.loading-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    font-size: 18px;
-    z-index: 999;
-    gap: 20px;
+#startArButton {
+  padding: 16px 32px;
+  font-size: 18px;
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  touch-action: manipulation;
 }
 
-.loading-overlay.hidden { display: none; }
-
-.spinner {
-    width: 50px; height: 50px;
-    border: 4px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+#startArButton:hover,
+#startArButton:active {
+  background: #0056b3;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ==================== ИНСТРУКЦИЯ ==================== */
-.instruction {
-    position: fixed;
-    bottom: 50%;
-    bottom: 30px;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.7);
-    color: white;
-    padding: 14px 24px;
-    border-radius: 30px;
-    font-size: 15px;
-    z-index: 100;
-    pointer-events: none;
+/* Для панели */
+#infoPanel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  cursor: pointer;
+  pointer-events: auto;
 }
 
-/* ==================== ИНФО-ПАНЕЛЬ (ИСПРАВЛЕНО) ==================== */
-.info-panel {
-    position: fixed;
-    left: 0;
-    width: 100%;
-    max-height: 70vh;
-    background: white;
-    border-radius: 25px 25px 0 0;
-    box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
-    z-index: 200;
-    bottom: -100%;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+/* Для флага */
+#flagSprite {
+  cursor: pointer;
+  pointer-events: auto;
 }
 
-.info-panel.active {
-    bottom: 0;
-    opacity: 1;
-    visibility: visible;
+/* Убираем мигание при касании на iOS */
+a-entity.clickable {
+  -webkit-tap-highlight-color: transparent;
 }
 
-.info-panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 25px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-radius: 25px 25px 0 0;
+/* Для мобильных устройств */
+@media (max-width: 768px) {
+  #startArButton {
+    padding: 14px 28px;
+    font-size: 16px;
+  }
 }
-
-.info-panel-header h2 { margin: 0; font-size: 20px; }
-
-.close-button {
-    width: 40px; height: 40px;
-    border: 2px solid white;
-    background: rgba(255,255,255,0.2);
-    color: white;
-    border-radius: 50%;
-    font-size: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
-
-.close-button:active { transform: scale(0.9); }
-
-.info-panel-content {
-    padding: 25px;
-    max-height: calc(70vh - 80px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.info-text { font-size: 16px; line-height: 1.7; color: #333; margin-bottom: 20px; }
-
-.back-button {
-    width: 100%;
-    padding: 16px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-size: 18px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-.back-button:active { transform: scale(0.97); }
-
-/* ==================== ОВЕРЛЕЙ ==================== */
-.panel-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 199;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease;
-}
-
-.panel-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
-
-/* ==================== АДАПТИВ ==================== */
-@media (min-width: 768px) {
-    .info-panel {
-        max-width: 500px;
-        left: 50%;
-        transform: translateX(-50%);
-        border-radius: 25px;
-    }
-    .info-panel.active { bottom: 30px; }
-}
-
-.clickable { cursor: pointer; }
