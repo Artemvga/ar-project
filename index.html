@@ -13,7 +13,7 @@
     <title>AR Project</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=1.0.1">
+    <link rel="stylesheet" href="css/style.css?v=1.0.2">
 </head>
 <body>
     <!-- Сцена 1: Стартовый экран -->
@@ -35,8 +35,8 @@
             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
             renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
             vr-mode-ui="enabled: false"
-            gesture-detector
-            loading-screen="enabled: false">
+            loading-screen="enabled: false"
+            cursor="rayOrigin: none">
             
             <!-- Ассеты -->
             <a-assets>
@@ -51,7 +51,7 @@
                 emitevents="true"
                 id="markerVacnecov">
                 
-                <!-- Спрайт флага по центру маркера с кликабельностью -->
+                <!-- Спрайт флага по центру маркера -->
                 <a-image
                     src="#flag"
                     position="0 0 0"
@@ -100,6 +100,6 @@
         <div class="panel-overlay" id="panelOverlay"></div>
     </div>
 
-    <script src="js/main.js?v=1.0.1"></script>
+    <script src="js/main.js?v=1.0.2"></script>
 </body>
 </html>
