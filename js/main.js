@@ -1,402 +1,85 @@
+// ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
 let cameraStream = null;
 let isFlagEnlarged = false;
 let arScene = null;
-let permissionRequested = false;
+let markerFound = false;
 
-// Основная функция переключения на AR
+// ========== ОСНОВНЫЕ ФУНКЦИИ ==========
+
+// Переключение на AR сцену
 function switchToAR() {
-    console.log("Переключаемся на AR сцену");
+    console.log("Переключение на AR сцену");
     
-    // Скрываем меню
+    // Скрыть меню
     document.getElementById('scene-menu').classList.remove('active');
     
-    // Показываем AR сцену
+    // Показать AR сцену
     document.getElementById('scene-ar').classList.add('active');
     
-    // Показываем лоадер с запросом разрешения
+    // Показать лоадер
     document.getElementById('ar-loader').classList.add('active');
-    document.getElementById('ar-loader').innerHTML = "Запрашиваю разрешение на камеру...";
+    updateLoaderText("Подготовка AR...");
     
-    // Ждем немного, чтобы DOM обновился
-    setTimeout(() => {
-        initializeARScene();
-    }, 100);
+    // Инициализировать AR
+    initializeAR();
 }
 
 // Возврат в меню
 function switchToMenu() {
-    console.log("Возвращаемся в меню");
+    console.log("Возврат в меню");
     
-    // Останавливаем камеру
+    // Остановить камеру
     stopCamera();
     
-    // Удаляем сцену
-    if (arScene) {
-        arScene.parentNode.removeChild(arScene);
-        arScene = null;
+    // Удалить AR сцену
+    const container = document.getElementById('ar-container');
+    if (container) {
+        container.innerHTML = '';
     }
     
-    // Скрываем AR сцену
+    // Скрыть AR сцену
     document.getElementById('scene-ar').classList.remove('active');
     
-    // Показываем меню
+    // Показать меню
     document.getElementById('scene-menu').classList.add('active');
     
-    // Скрываем лоадер и ошибки
+    // Скрыть лоадер
     document.getElementById('ar-loader').classList.remove('active');
-    hideCameraError();
     
-    // Сбрасываем флаг разрешения
-    permissionRequested = false;
+    // Сброс состояния
+    isFlagEnlarged = false;
+    markerFound = false;
 }
 
-// Инициализация AR сцены
-function initializeARScene() {
-    console.log("Инициализация AR сцены");
+// Инициализация AR
+function initializeAR() {
+    console.log("Инициализация AR");
     
-    // Проверяем поддержку
+    // Проверить поддержку
     if (!checkARSupport()) {
-        showCameraError("Ваш браузер не поддерживает AR");
+        showError("Ваш браузер не поддерживает AR. Пожалуйста, используйте Chrome или Safari на мобильном устройстве.");
         return;
     }
     
-    // Запрашиваем доступ к камере
+    // Запросить разрешение на камеру
     requestCameraPermission()
-        .then(stream => {
-            console.log("Доступ к камере получен");
-            cameraStream = stream;
-            permissionRequested = true;
-            
-            // Скрываем лоадер
-            document.getElementById('ar-loader').classList.remove('active');
-            
-            // Создаем AR сцену
-            setupARScene();
-            
-            // Настраиваем клик на флаге
-            setupFlagInteraction();
-            
-            // Обновляем подсказку
-            updateHint("Камера активна. Наведите на маркер");
+        .then(() => {
+            // Создать AR сцену
+            createARScene();
         })
         .catch(error => {
             console.error("Ошибка доступа к камере:", error);
-            document.getElementById('ar-loader').classList.remove('active');
-            
-            // Определяем тип ошибки
-            let errorMessage = "Не удалось получить доступ к камере";
-            
-            if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-                errorMessage = "Доступ к камере запрещен. Разрешите доступ в настройках браузера.";
-                showPermissionInstructions();
-            } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
-                errorMessage = "Камера не найдена. Убедитесь, что камера подключена и работает.";
-            } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
-                errorMessage = "Камера уже используется другим приложением. Закройте другие приложения, использующие камеру.";
-            } else if (error.name === 'OverconstrainedError' || error.name === 'ConstraintNotSatisfiedError') {
-                errorMessage = "Требуемый тип камеры не найден. Используйте другую камеру.";
-            } else if (error.name === 'SecurityError') {
-                errorMessage = "Доступ к камере запрещен из соображений безопасности. Откройте сайт по HTTPS.";
-            }
-            
-            showCameraError(errorMessage);
+            showError("Не удалось получить доступ к камере. Разрешите доступ в настройках браузера.");
         });
 }
 
-// Функция запроса разрешения на камеру
-function requestCameraPermission() {
-    return new Promise((resolve, reject) => {
-        // Сначала проверим текущее состояние разрешения
-        if (navigator.permissions && navigator.permissions.query) {
-            navigator.permissions.query({ name: 'camera' })
-                .then(permissionStatus => {
-                    console.log("Текущий статус разрешения камеры:", permissionStatus.state);
-                    
-                    // Если уже разрешено, сразу запрашиваем камеру
-                    if (permissionStatus.state === 'granted') {
-                        console.log("Разрешение уже получено");
-                        getUserMedia().then(resolve).catch(reject);
-                    } 
-                    // Если еще не решено, показываем запрос
-                    else if (permissionStatus.state === 'prompt') {
-                        console.log("Показываю запрос разрешения");
-                        showPermissionRequest()
-                            .then(() => getUserMedia().then(resolve).catch(reject))
-                            .catch(reject);
-                    }
-                    // Если запрещено
-                    else if (permissionStatus.state === 'denied') {
-                        reject(new Error('PermissionDeniedError'));
-                    }
-                })
-                .catch(() => {
-                    // Если API permissions не поддерживается, сразу запрашиваем
-                    console.log("API permissions не поддерживается, запрашиваю напрямую");
-                    showPermissionRequest()
-                        .then(() => getUserMedia().then(resolve).catch(reject))
-                        .catch(reject);
-                });
-        } else {
-            // Для браузеров без API permissions
-            console.log("Прямой запрос камеры");
-            showPermissionRequest()
-                .then(() => getUserMedia().then(resolve).catch(reject))
-                .catch(reject);
-        }
-    });
-}
-
-// Показать запрос разрешения
-function showPermissionRequest() {
-    return new Promise((resolve, reject) => {
-        // Создаем модальное окно запроса разрешения
-        const permissionModal = document.createElement('div');
-        permissionModal.id = 'permission-modal';
-        permissionModal.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 10000;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
-            padding: 20px;
-        `;
-        
-        permissionModal.innerHTML = `
-            <div style="max-width: 400px;">
-                <h2 style="color: #4cc9f0; margin-bottom: 20px;">📷 Разрешите доступ к камере</h2>
-                <p style="margin-bottom: 20px; line-height: 1.5;">
-                    Для работы AR необходимо разрешить доступ к камере вашего устройства.
-                    Браузер запросит разрешение в следующем окне.
-                </p>
-                <p style="margin-bottom: 30px; color: #aaa; font-size: 0.9em;">
-                    Разрешение необходимо только для отображения AR-контента.
-                    Мы не сохраняем и не передаем видео с камеры.
-                </p>
-                <div style="display: flex; gap: 15px; justify-content: center;">
-                    <button id="allow-camera" style="
-                        background: #4cc9f0;
-                        color: white;
-                        border: none;
-                        padding: 12px 30px;
-                        border-radius: 25px;
-                        font-size: 1.1em;
-                        cursor: pointer;
-                    ">Разрешить камеру</button>
-                    <button id="deny-camera" style="
-                        background: transparent;
-                        color: #aaa;
-                        border: 1px solid #aaa;
-                        padding: 12px 30px;
-                        border-radius: 25px;
-                        font-size: 1.1em;
-                        cursor: pointer;
-                    ">Отказать</button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(permissionModal);
-        
-        // Обработчики кнопок
-        document.getElementById('allow-camera').onclick = () => {
-            permissionModal.remove();
-            resolve();
-        };
-        
-        document.getElementById('deny-camera').onclick = () => {
-            permissionModal.remove();
-            reject(new Error('PermissionDeniedError'));
-        };
-        
-        // Автоматическое закрытие через 30 секунд
-        setTimeout(() => {
-            if (document.getElementById('permission-modal')) {
-                permissionModal.remove();
-                reject(new Error('PermissionTimeoutError'));
-            }
-        }, 30000);
-    });
-}
-
-// Получить доступ к камере (техническая функция)
-function getUserMedia() {
-    return new Promise((resolve, reject) => {
-        // Оптимальные настройки для камеры
-        const constraints = {
-            audio: false,
-            video: {
-                facingMode: { ideal: 'environment' }, // Предпочитаем заднюю камеру
-                width: { ideal: 1280, max: 1920 },
-                height: { ideal: 720, max: 1080 },
-                frameRate: { ideal: 30, max: 60 }
-            }
-        };
-        
-        // Для iOS нужно добавить дополнительные параметры
-        const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
-        if (isIOS) {
-            constraints.video = {
-                facingMode: { ideal: 'environment' },
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            };
-        }
-        
-        console.log("Запрашиваю камеру с параметрами:", constraints);
-        
-        navigator.mediaDevices.getUserMedia(constraints)
-            .then(stream => {
-                console.log("Камера успешно подключена");
-                resolve(stream);
-            })
-            .catch(error => {
-                console.error("Ошибка getUserMedia:", error);
-                
-                // Пробуем упрощенные настройки
-                if (error.name === 'OverconstrainedError') {
-                    console.log("Пробую упрощенные настройки камеры");
-                    const simpleConstraints = {
-                        audio: false,
-                        video: true // Просто true, браузер сам выберет
-                    };
-                    
-                    navigator.mediaDevices.getUserMedia(simpleConstraints)
-                        .then(resolve)
-                        .catch(reject);
-                } else {
-                    reject(error);
-                }
-            });
-    });
-}
-
-// Показать инструкции по разрешению
-function showPermissionInstructions() {
-    const instructions = document.createElement('div');
-    instructions.id = 'permission-instructions';
-    instructions.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.95);
-        z-index: 10001;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        padding: 20px;
-    `;
-    
-    const browser = detectBrowser();
-    let instructionsHTML = '';
-    
-    if (browser === 'safari') {
-        instructionsHTML = `
-            <div style="max-width: 400px;">
-                <h2 style="color: #4cc9f0; margin-bottom: 20px;">📱 Для Safari на iOS</h2>
-                <ol style="text-align: left; line-height: 1.6; margin-bottom: 30px;">
-                    <li>Нажмите на кнопку "AA" в адресной строке Safari</li>
-                    <li>Выберите "Настройки для этого сайта"</li>
-                    <li>Найдите пункт "Камера"</li>
-                    <li>Выберите "Разрешить" или "Спросить"</li>
-                    <li>Обновите страницу</li>
-                </ol>
-            </div>
-        `;
-    } else if (browser === 'chrome-mobile') {
-        instructionsHTML = `
-            <div style="max-width: 400px;">
-                <h2 style="color: #4cc9f0; margin-bottom: 20px;">📱 Для Chrome на Android</h2>
-                <ol style="text-align: left; line-height: 1.6; margin-bottom: 30px;">
-                    <li>Нажмите на иконку 🔒 в адресной строке</li>
-                    <li>Найдите пункт "Камера"</li>
-                    <li>Выберите "Разрешить"</li>
-                    <li>Обновите страницу</li>
-                </ol>
-            </div>
-        `;
-    } else {
-        instructionsHTML = `
-            <div style="max-width: 400px;">
-                <h2 style="color: #4cc9f0; margin-bottom: 20px;">🔧 Настройки разрешений</h2>
-                <p style="margin-bottom: 20px; line-height: 1.5;">
-                    Чтобы разрешить доступ к камере:
-                </p>
-                <ol style="text-align: left; line-height: 1.6; margin-bottom: 30px;">
-                    <li>Найдите иконку камеры или замка в адресной строке</li>
-                    <li>Нажмите на неё, чтобы открыть настройки сайта</li>
-                    <li>Найдите настройки камеры и выберите "Разрешить"</li>
-                    <li>Обновите страницу и попробуйте снова</li>
-                </ol>
-            </div>
-        `;
-    }
-    
-    instructionsHTML += `
-        <div style="display: flex; gap: 15px; justify-content: center;">
-            <button id="retry-camera" style="
-                background: #4cc9f0;
-                color: white;
-                border: none;
-                padding: 12px 30px;
-                border-radius: 25px;
-                cursor: pointer;
-            ">Повторить</button>
-            <button id="back-to-menu" style="
-                background: transparent;
-                color: #aaa;
-                border: 1px solid #aaa;
-                padding: 12px 30px;
-                border-radius: 25px;
-                cursor: pointer;
-            ">Вернуться в меню</button>
-        </div>
-    `;
-    
-    instructions.innerHTML = instructionsHTML;
-    document.body.appendChild(instructions);
-    
-    // Обработчики кнопок
-    document.getElementById('retry-camera').onclick = () => {
-        instructions.remove();
-        setTimeout(switchToAR, 100);
-    };
-    
-    document.getElementById('back-to-menu').onclick = () => {
-        instructions.remove();
-        switchToMenu();
-    };
-}
-
-// Определить браузер
-function detectBrowser() {
-    const ua = navigator.userAgent;
-    
-    if (/iPhone|iPad|iPod/.test(ua) && /Safari/.test(ua)) {
-        return 'safari';
-    } else if (/Android/.test(ua) && /Chrome/.test(ua)) {
-        return 'chrome-mobile';
-    } else if (/Chrome/.test(ua)) {
-        return 'chrome';
-    } else if (/Firefox/.test(ua)) {
-        return 'firefox';
-    }
-    
-    return 'other';
-}
+// ========== ПРОВЕРКА ПОДДЕРЖКИ ==========
 
 // Проверка поддержки AR
 function checkARSupport() {
-    // Проверяем WebGL
+    console.log("Проверка поддержки AR");
+    
+    // Проверить WebGL
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     if (!gl) {
@@ -404,34 +87,348 @@ function checkARSupport() {
         return false;
     }
     
-    // Проверяем getUserMedia
+    // Проверить getUserMedia
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         console.error("getUserMedia не поддерживается");
         return false;
     }
     
+    // Проверить A-Frame
+    if (typeof AFRAME === 'undefined') {
+        console.error("A-Frame не загружен");
+        return false;
+    }
+    
+    console.log("AR поддерживается");
     return true;
 }
 
-// Остальные функции оставляем без изменений (но они должны быть в файле)
-// setupARScene(), setupFlagInteraction(), toggleFlagSize(), stopCamera(), etc.
+// ========== РАБОТА С КАМЕРОЙ ==========
 
-// ... [остальные функции из предыдущего кода остаются без изменений] ...
+// Запрос разрешения на камеру
+function requestCameraPermission() {
+    return new Promise((resolve, reject) => {
+        updateLoaderText("Запрос доступа к камере...");
+        
+        // Создать модальное окно
+        createCameraPermissionModal(resolve, reject);
+    });
+}
 
-// Проверка при загрузке страницы
+// Создание модального окна разрешения камеры
+function createCameraPermissionModal(resolve, reject) {
+    const modalHTML = `
+        <div id="camera-permission-modal">
+            <div class="permission-modal-content">
+                <h2 class="permission-title">📷 Доступ к камере</h2>
+                <p class="permission-text">
+                    Для работы AR необходимо разрешить доступ к камере вашего устройства.
+                    После нажатия "Разрешить" браузер запросит подтверждение.
+                </p>
+                <div class="permission-buttons">
+                    <button class="permission-btn allow" id="allow-camera-btn">
+                        Разрешить камеру
+                    </button>
+                    <button class="permission-btn deny" id="deny-camera-btn">
+                        Отмена
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Добавить модальное окно
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Обработчики кнопок
+    document.getElementById('allow-camera-btn').onclick = () => {
+        removePermissionModal();
+        requestCameraAccess().then(resolve).catch(reject);
+    };
+    
+    document.getElementById('deny-camera-btn').onclick = () => {
+        removePermissionModal();
+        reject(new Error('Пользователь отказал в доступе к камере'));
+    };
+}
+
+// Удалить модальное окно разрешения
+function removePermissionModal() {
+    const modal = document.getElementById('camera-permission-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+// Запрос доступа к камере
+function requestCameraAccess() {
+    return new Promise((resolve, reject) => {
+        updateLoaderText("Подключение к камере...");
+        
+        // Настройки камеры
+        const constraints = {
+            audio: false,
+            video: {
+                facingMode: { ideal: 'environment' }, // Задняя камера
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        };
+        
+        // Для iOS нужны особые настройки
+        const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+        if (isIOS) {
+            constraints.video = {
+                facingMode: { ideal: 'environment' }
+            };
+        }
+        
+        // Запросить камеру
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+                console.log("Камера подключена");
+                cameraStream = stream;
+                resolve();
+            })
+            .catch(error => {
+                console.error("Ошибка getUserMedia:", error);
+                
+                // Попробовать упрощенные настройки
+                updateLoaderText("Повторная попытка подключения...");
+                
+                const simpleConstraints = {
+                    audio: false,
+                    video: true
+                };
+                
+                navigator.mediaDevices.getUserMedia(simpleConstraints)
+                    .then(stream => {
+                        cameraStream = stream;
+                        resolve();
+                    })
+                    .catch(reject);
+            });
+    });
+}
+
+// Остановка камеры
+function stopCamera() {
+    if (cameraStream) {
+        console.log("Остановка камеры");
+        cameraStream.getTracks().forEach(track => {
+            track.stop();
+        });
+        cameraStream = null;
+    }
+}
+
+// ========== СОЗДАНИЕ AR СЦЕНЫ ==========
+
+// Создание AR сцены
+function createARScene() {
+    console.log("Создание AR сцены");
+    updateLoaderText("Создание AR сцены...");
+    
+    const container = document.getElementById('ar-container');
+    
+    // HTML для A-Frame сцены
+    const sceneHTML = `
+        <a-scene
+            vr-mode-ui="enabled: false"
+            loading-screen="enabled: false"
+            embedded
+            arjs="sourceType: webcam; 
+                  trackingMethod: best; 
+                  debugUIEnabled: false;
+                  detectionMode: mono_and_matrix;
+                  matrixCodeType: 3x3;"
+            renderer="antialias: true; 
+                      alpha: true; 
+                      logarithmicDepthBuffer: true;"
+        >
+            <a-assets>
+                <img id="flag-img" src="assets/sprite/Flag.png" crossorigin="anonymous">
+            </a-assets>
+            
+            <a-marker
+                id="marker"
+                type="pattern"
+                preset="custom"
+                url="assets/markers/MarkerVacnecov.patt"
+                emitevents="true"
+                cursor="rayOrigin: mouse"
+                raycaster="objects: .clickable"
+            >
+                <a-image
+                    id="flag"
+                    class="clickable"
+                    src="#flag-img"
+                    scale="0.25 0.25 0.25"
+                    position="0 0.5 0"
+                    rotation="-90 0 0"
+                ></a-image>
+            </a-marker>
+            
+            <a-entity camera></a-entity>
+        </a-scene>
+    `;
+    
+    // Вставить сцену
+    container.innerHTML = sceneHTML;
+    
+    // Получить ссылку на сцену
+    arScene = container.querySelector('a-scene');
+    
+    // Настроить обработчики событий после загрузки сцены
+    arScene.addEventListener('loaded', () => {
+        console.log("AR сцена загружена");
+        setupEventListeners();
+        document.getElementById('ar-loader').classList.remove('active');
+        updateHint("Наведите камеру на маркер MarkerVacnecov");
+    });
+    
+    // Обработка ошибок сцены
+    arScene.addEventListener('error', (error) => {
+        console.error("Ошибка AR сцены:", error);
+        showError("Ошибка загрузки AR сцены. Пожалуйста, обновите страницу.");
+    });
+}
+
+// ========== НАСТРОЙКА ОБРАБОТЧИКОВ СОБЫТИЙ ==========
+
+// Настройка обработчиков событий
+function setupEventListeners() {
+    console.log("Настройка обработчиков событий");
+    
+    // Обработчик для маркера
+    const marker = document.getElementById('marker');
+    if (marker) {
+        marker.addEventListener('markerFound', () => {
+            console.log("Маркер найден!");
+            markerFound = true;
+            updateHint("Маркер найден! Нажмите на флаг для увеличения");
+        });
+        
+        marker.addEventListener('markerLost', () => {
+            console.log("Маркер потерян");
+            markerFound = false;
+            updateHint("Наведите на маркер MarkerVacnecov");
+        });
+    }
+    
+    // Обработчик клика на флаге
+    document.addEventListener('click', function(event) {
+        if (!markerFound) return;
+        
+        // Проверить, был ли клик по флагу
+        const flag = document.getElementById('flag');
+        if (flag) {
+            // Для A-Frame нужно использовать raycasting, но для простоты будем считать,
+            // что любой клик при найденном маркере - это клик по флагу
+            toggleFlagSize();
+        }
+    });
+    
+    // Обработчик касаний для мобильных
+    document.addEventListener('touchstart', function(event) {
+        if (!markerFound || event.touches.length !== 1) return;
+        
+        // Предотвратить масштабирование
+        event.preventDefault();
+        
+        const flag = document.getElementById('flag');
+        if (flag) {
+            toggleFlagSize();
+        }
+    });
+}
+
+// Увеличение/уменьшение флага
+function toggleFlagSize() {
+    const flag = document.getElementById('flag');
+    if (!flag) return;
+    
+    if (!isFlagEnlarged) {
+        // Увеличить в 2 раза
+        flag.setAttribute('scale', '0.5 0.5 0.5');
+        isFlagEnlarged = true;
+        updateHint("Флаг увеличен! Нажмите ещё раз для уменьшения");
+        console.log("Флаг увеличен в 2 раза");
+    } else {
+        // Вернуть исходный размер
+        flag.setAttribute('scale', '0.25 0.25 0.25');
+        isFlagEnlarged = false;
+        updateHint("Флаг уменьшен. Нажмите для увеличения");
+        console.log("Флаг уменьшен до исходного размера");
+    }
+}
+
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+
+// Обновление текста лоадера
+function updateLoaderText(text) {
+    const loaderText = document.getElementById('loader-text');
+    if (loaderText) {
+        loaderText.textContent = text;
+    }
+}
+
+// Обновление подсказки
+function updateHint(message) {
+    const hint = document.getElementById('ar-hint');
+    if (hint) {
+        hint.textContent = message;
+        
+        // Анимация появления
+        hint.style.opacity = '0';
+        setTimeout(() => {
+            hint.style.opacity = '1';
+            hint.style.transition = 'opacity 0.3s ease';
+        }, 50);
+    }
+}
+
+// Показать ошибку
+function showError(message) {
+    // Скрыть лоадер
+    document.getElementById('ar-loader').classList.remove('active');
+    
+    // Показать alert с ошибкой
+    alert(message);
+    
+    // Вернуться в меню
+    setTimeout(switchToMenu, 100);
+}
+
+// ========== ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ ==========
+
+// Инициализация при загрузке страницы
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Страница загружена");
     
-    // Добавляем сообщение в меню о необходимости камеры
-    const menuDescription = document.querySelector('.description');
-    if (menuDescription) {
-        menuDescription.innerHTML += '<br><small style="color: #4cc9f0; font-size: 0.9em;">Требуется доступ к камере</small>';
+    // Определить устройство
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+        console.log("Мобильное устройство обнаружено");
+        
+        if (isSafari) {
+            console.log("Браузер: Safari на iOS");
+            // Добавить предупреждение для Safari
+            const description = document.querySelector('.description');
+            if (description) {
+                description.innerHTML += '<br><small style="color: #4cc9f0;">Для Safari: разрешите камеру в настройках сайта</small>';
+            }
+        }
     }
     
-    // Обработка закрытия/обновления страницы
+    // Обработка закрытия страницы
     window.addEventListener('beforeunload', stopCamera);
     window.addEventListener('pagehide', stopCamera);
 });
+
+// ========== ЭКСПОРТ ФУНКЦИЙ ==========
 
 // Экспорт функций для кнопок
 window.switchToAR = switchToAR;

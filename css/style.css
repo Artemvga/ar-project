@@ -1,3 +1,4 @@
+/* Сброс стилей */
 * {
     margin: 0;
     padding: 0;
@@ -9,7 +10,8 @@ html, body {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background: #000;
 }
 
 /* Сцены */
@@ -26,9 +28,9 @@ html, body {
     display: block;
 }
 
-/* Меню */
+/* Сцена меню */
 #scene-menu {
-    background: #1a1a1a;
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -37,38 +39,49 @@ html, body {
 .menu-content {
     text-align: center;
     padding: 20px;
+    max-width: 400px;
 }
 
 h1 {
     color: white;
-    font-size: 2rem;
-    margin-bottom: 10px;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    font-weight: 700;
+    background: linear-gradient(45deg, #4cc9f0, #4361ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 10px rgba(76, 201, 240, 0.3);
 }
 
 .description {
-    color: #aaa;
-    font-size: 1rem;
-    margin-bottom: 30px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1.1rem;
+    margin-bottom: 40px;
+    line-height: 1.5;
 }
 
 .start-btn {
-    background: #007AFF;
+    background: linear-gradient(45deg, #f72585, #b5179e);
     color: white;
     border: none;
-    padding: 15px 40px;
-    font-size: 1.1rem;
+    padding: 16px 40px;
+    font-size: 1.2rem;
+    font-weight: 600;
     border-radius: 25px;
     cursor: pointer;
-    width: 180px;
+    width: 200px;
+    box-shadow: 0 5px 15px rgba(247, 37, 133, 0.4);
+    transition: all 0.3s ease;
 }
 
 .start-btn:active {
-    background: #0056CC;
+    transform: translateY(2px);
+    box-shadow: 0 2px 10px rgba(247, 37, 133, 0.4);
 }
 
-/* AR сцена */
+/* Сцена AR */
 #scene-ar {
-    background: black;
+    background: #000;
 }
 
 .back-btn {
@@ -76,51 +89,170 @@ h1 {
     top: 20px;
     left: 20px;
     z-index: 1000;
-    background: rgba(0,0,0,0.7);
+    background: rgba(0, 0, 0, 0.7);
     color: white;
-    border: 1px solid rgba(255,255,255,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     padding: 10px 20px;
     border-radius: 20px;
     font-size: 1rem;
     cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.back-btn:active {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .ar-hint {
     position: fixed;
-    bottom: 20px;
+    bottom: 30px;
     left: 0;
     right: 0;
     text-align: center;
     color: white;
-    font-size: 0.9rem;
-    padding: 10px;
-    background: rgba(0,0,0,0.7);
+    font-size: 1rem;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
 }
 
-/* A-Frame */
-#ar-scene {
+/* Лоадер */
+.ar-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 1001;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }
 
-.a-enter-vr {
-    display: none !important;
+.ar-loader.active {
+    display: flex;
 }
 
-/* Мобильная адаптация */
+.loader-content {
+    text-align: center;
+    max-width: 300px;
+}
+
+.loader-spinner {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    border-top-color: #4cc9f0;
+    animation: spin 1s ease-in-out infinite;
+    margin: 0 auto 20px;
+}
+
+.loader-text {
+    color: white;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Модальное окно разрешения камеры */
+#camera-permission-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 1002;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    animation: fadeIn 0.3s ease;
+}
+
+.permission-modal-content {
+    background: rgba(30, 30, 30, 0.95);
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    border: 1px solid #4cc9f0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.permission-title {
+    color: #4cc9f0;
+    font-size: 1.8rem;
+    margin-bottom: 20px;
+}
+
+.permission-text {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.6;
+    margin-bottom: 30px;
+    font-size: 1.1rem;
+}
+
+.permission-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.permission-btn {
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+    min-width: 160px;
+}
+
+.permission-btn.allow {
+    background: #4cc9f0;
+    color: white;
+}
+
+.permission-btn.deny {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid #aaa;
+}
+
+.permission-btn:active {
+    transform: translateY(2px);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Адаптация для мобильных */
 @media (max-width: 768px) {
     h1 {
-        font-size: 1.8rem;
+        font-size: 2rem;
     }
     
     .description {
-        font-size: 0.9rem;
+        font-size: 1rem;
     }
     
     .start-btn {
-        padding: 12px 35px;
-        font-size: 1rem;
-        width: 160px;
+        padding: 14px 35px;
+        font-size: 1.1rem;
+        width: 180px;
     }
     
     .back-btn {
@@ -131,115 +263,72 @@ h1 {
     }
     
     .ar-hint {
-        bottom: 15px;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
+        padding: 12px;
+        bottom: 20px;
     }
-    /* Дополнительные стили для AR сцены */
-    #ar-container {
+    
+    .permission-modal-content {
+        padding: 20px;
+        margin: 15px;
+    }
+    
+    .permission-title {
+        font-size: 1.5rem;
+    }
+    
+    .permission-text {
+        font-size: 1rem;
+    }
+    
+    .permission-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .permission-btn {
         width: 100%;
-        height: 100%;
-        position: relative;
+        min-width: auto;
     }
+}
 
-    /* Лоадер для камеры */
-    .ar-loader {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 20px 30px;
-        border-radius: 10px;
-        z-index: 1001;
-        display: none;
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.8rem;
     }
+    
+    .description {
+        font-size: 0.95rem;
+    }
+    
+    .start-btn {
+        padding: 12px 30px;
+        font-size: 1rem;
+        width: 160px;
+    }
+    
+    .ar-hint {
+        font-size: 0.85rem;
+        bottom: 15px;
+    }
+}
 
-    .ar-loader.active {
-        display: block;
+/* Поддержка iOS */
+@supports (-webkit-touch-callout: none) {
+    .scene {
+        height: -webkit-fill-available;
     }
-
-    /* Стили для iOS Safari */
-    .ios-warning {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0, 0, 0, 0.9);
-        color: white;
-        padding: 20px;
-        border-radius: 10px;
-        z-index: 1002;
-        max-width: 300px;
-        text-align: center;
-        display: none;
+    
+    #scene-menu {
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-top: env(safe-area-inset-top);
     }
-
-    /* Улучшение видимости камеры */
-    .a-canvas {
-        width: 100% !important;
-        height: 100% !important;
-        position: absolute !important;
-        top: 0 !important;
-        left: 0 !important;
+    
+    .back-btn {
+        top: max(15px, env(safe-area-inset-top));
     }
-
-    /* Для ошибки доступа к камере */
-    .camera-error {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(255, 50, 50, 0.9);
-        color: white;
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        z-index: 1003;
-        display: none;
-    }
-
-    .camera-error.active {
-        display: block;
-    }
-        /* Стили для модальных окон разрешений */
-    #permission-modal, #permission-instructions {
-        animation: fadeIn 0.3s ease;
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-
-    /* Стили для кнопок в модальных окнах */
-    #permission-modal button, #permission-instructions button {
-        transition: all 0.2s ease;
-        font-weight: 600;
-    }
-
-    #permission-modal button:hover, #permission-instructions button:hover {
-        transform: translateY(-2px);
-    }
-
-    #permission-modal button:active, #permission-instructions button:active {
-        transform: translateY(0);
-    }
-
-    /* Адаптация модальных окон для мобильных */
-    @media (max-width: 768px) {
-        #permission-modal > div, #permission-instructions > div {
-            max-width: 90% !important;
-            padding: 15px !important;
-        }
-        
-        #permission-modal h2, #permission-instructions h2 {
-            font-size: 1.3rem !important;
-        }
-        
-        #permission-modal button, #permission-instructions button {
-            padding: 10px 20px !important;
-            font-size: 1rem !important;
-        }
+    
+    .ar-hint {
+        bottom: max(15px, env(safe-area-inset-bottom));
     }
 }
