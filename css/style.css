@@ -1,103 +1,295 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    position: fixed;
+}
+
+/* ============================================
+   СЦЕНА 1 - СТАРТОВЫЙ ЭКРАН
+   ============================================ */
+#scene1 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+}
+
+#scene1.hidden {
+    display: none;
+}
+
+.start-button {
+    padding: 20px 60px;
+    font-size: 24px;
+    font-weight: 600;
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    border: 3px solid white;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    -webkit-tap-highlight-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.start-button:active {
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================
+   СЦЕНА 2 - AR
+   ============================================ */
+#scene2 {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+#scene2.active {
+    display: block;
+}
+
+.ar-scene {
+    width: 100%;
+    height: 100%;
+}
+
+/* ============================================
+   ИНДИКАТОР ЗАГРУЗКИ
+   ============================================ */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    color: white;
+    font-size: 18px;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.loading-overlay.hidden {
+    display: none;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   ИНСТРУКЦИЯ
+   ============================================ */
+.instruction {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 15px 25px;
+    border-radius: 25px;
+    font-size: 14px;
+    z-index: 100;
+    text-align: center;
+    max-width: 90%;
+    transition: opacity 0.3s ease;
+}
+
+.instruction.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* ============================================
+   ИНФОРМАЦИОННАЯ ПАНЕЛЬ
+   ============================================ */
+.info-panel {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    width: 100%;
+    max-height: 70vh;
+    background: white;
+    border-radius: 25px 25px 0 0;
+    box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.3);
+    z-index: 200;
+    transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    display: none;
+}
+
+.info-panel.active {
+    bottom: 0;
+    display: block;
+}
+
+.info-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px;
+    border-bottom: 1px solid #e0e0e0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.info-panel-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.close-button {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    color: white;
+    font-size: 32px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.3s ease;
+}
+
+.close-button:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.info-panel-content {
+    padding: 25px;
+    overflow-y: auto;
+    max-height: calc(70vh - 80px);
+    -webkit-overflow-scrolling: touch;
+}
+
+.info-text {
+    font-size: 16px;
+    line-height: 1.8;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.back-button {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.back-button:active {
+    transform: scale(0.97);
+    opacity: 0.9;
+}
+
+/* ============================================
+   ОВЕРЛЕЙ ДЛЯ ПАНЕЛИ
+   ============================================ */
+.panel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 199;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    display: none;
+}
+
+.panel-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+    display: block;
+}
+
+/* ============================================
+   ФИКС ДЛЯ A-FRAME
+   ============================================ */
+a-scene {
+    width: 100%;
+    height: 100%;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+/* ============================================
+   АДАПТАЦИЯ ДЛЯ РАЗНЫХ РАЗМЕРОВ
+   ============================================ */
+@media (max-height: 600px) {
+    .info-panel {
+        max-height: 80vh;
+    }
     
-    <!-- Отключение кеширования -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
+    .info-panel-content {
+        max-height: calc(80vh - 80px);
+    }
+}
+
+@media (min-width: 768px) {
+    .info-panel {
+        max-width: 500px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 25px;
+        bottom: -100%;
+    }
     
-    <title>AR Project</title>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=1.0.1">
-</head>
-<body>
-    <!-- Сцена 1: Стартовый экран -->
-    <div id="scene1">
-        <button class="start-button" id="startButton">Start AR</button>
-    </div>
-
-    <!-- Индикатор загрузки -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div>Загрузка камеры...</div>
-    </div>
-
-    <!-- Сцена 2: AR -->
-    <div id="scene2">
-        <a-scene
-            class="ar-scene"
-            embedded
-            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-            renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
-            vr-mode-ui="enabled: false"
-            gesture-detector
-            loading-screen="enabled: false">
-            
-            <!-- Ассеты -->
-            <a-assets>
-                <img id="flag" src="assets/sprites/Flag.png" crossorigin="anonymous">
-            </a-assets>
-
-            <!-- Маркер -->
-            <a-marker
-                type="pattern"
-                preset="custom"
-                url="assets/markers/MarkerVacnecov.patt"
-                emitevents="true"
-                id="markerVacnecov">
-                
-                <!-- Спрайт флага по центру маркера с кликабельностью -->
-                <a-image
-                    src="#flag"
-                    position="0 0 0"
-                    rotation="-90 0 0"
-                    scale="1 1 1"
-                    transparent="true"
-                    alpha-test="0.5"
-                    material="shader: flat; side: double"
-                    class="clickable"
-                    id="flagSprite">
-                </a-image>
-            </a-marker>
-
-            <!-- Камера -->
-            <a-entity camera look-controls="enabled: false"></a-entity>
-        </a-scene>
-
-        <!-- Инструкция -->
-        <div class="instruction" id="instruction">
-            Наведите камеру на маркер
-        </div>
-
-        <!-- Информационная панель -->
-        <div class="info-panel" id="infoPanel">
-            <div class="info-panel-header">
-                <h2>Информация о флаге</h2>
-                <button class="close-button" id="closePanel">&times;</button>
-            </div>
-            <div class="info-panel-content">
-                <p class="info-text">
-                    Здесь находится информация о флаге Вацнецова. 
-                    Вы можете добавить любой текст, описание, историческую справку 
-                    или другую интересную информацию об этом объекте.
-                </p>
-                <p class="info-text">
-                    Этот флаг имеет особое значение и символизирует важные события. 
-                    Добавьте сюда подробности, которые хотите показать пользователям.
-                </p>
-                <button class="back-button" id="backButton">Назад</button>
-            </div>
-        </div>
-
-        <!-- Оверлей для закрытия панели -->
-        <div class="panel-overlay" id="panelOverlay"></div>
-    </div>
-
-    <script src="js/main.js?v=1.0.1"></script>
-</body>
-</html>
+    .info-panel.active {
+        bottom: 20px;
+    }
+}
