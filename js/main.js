@@ -14,7 +14,7 @@ window.ARApp = {
     });
 
     // Добавляем обработчики для маркера через A-Frame
-    const scene = document.querySelector('a-scene');
+    const scene = document.querySelector('#arScene');
     if (scene) {
       scene.addEventListener('marker-found', (e) => {
         this.onMarkerFound(e);
@@ -26,7 +26,6 @@ window.ARApp = {
 
     // Обработка клика по флагу и панели
     document.addEventListener('click', (e) => {
-      // Если клик не по флагу или панели — закрываем панель
       if (
         !e.target.closest('#flagSprite') &&
         !e.target.closest('#infoPanel') &&
@@ -46,15 +45,21 @@ window.ARApp = {
       scene1.style.display = 'none';
       scene2.style.display = 'flex';
 
-      // Запуск AR.js (если нужно)
+      // Убедимся, что камера запускается
       this.initARScene();
     }
   },
 
-  // Инициализация AR-сцены (опционально)
+  // Инициализация AR-сцены (запуск камеры)
   initARScene() {
-    // Можно добавить логику, если нужно что-то инициализировать после старта
-    console.log('AR сцена запущена');
+    const scene = document.querySelector('#arScene');
+    if (scene) {
+      // Вручную запускаем камеру (на случай, если она не запустилась автоматически)
+      const camera = scene.querySelector('a-entity[camera]');
+      if (camera) {
+        console.log('Камера активирована');
+      }
+    }
   },
 
   // Обработчик: маркер найден

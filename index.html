@@ -7,8 +7,11 @@
   <link rel="stylesheet" href="css/style.css">
   <!-- A-Frame -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <!-- AR.js -->
-  <script src="https://raw.githack.com/jeromeetienne/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+  <!-- AR.js (старая, но стабильная версия для pattern-маркеров) -->
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <!-- Дополнительные скрипты для gesture-detector (если нужно) -->
+  <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-detector.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/studio-backend/master/src/modules/marker/tools/gesture-handler.js"></script>
 </head>
 <body>
   <!-- Сцена 1: Начальный экран -->
@@ -22,20 +25,24 @@
   <div id="scene2" class="scene" style="display:none;">
     <a-scene
       vr-mode-ui="enabled: false"
-      embedded
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-      renderer="antialias: true; gammaOutput: true; physicallyCorrectLights: true"
       loading-screen="enabled: false"
+      arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; maxDetectionRate: 30;"
+      embedded
+      gesture-detector
+      id="arScene"
     >
       <!-- Камера -->
-      <a-camera static></a-camera>
+      <a-entity camera></a-entity>
 
       <!-- Маркер -->
-      <a-nft
-        type="nft"
-        url="./assets/markers/MarkerVacnecov"
-        smooth="true"
-        smoothTime="0.3"
+      <a-marker
+        id="vacnecovMarker"
+        type="pattern"
+        preset="custom"
+        url="./assets/markers/MarkerVacnecov.patt"
+        raycaster="objects: .clickable"
+        emitevents="true"
+        cursor="fuse: false; rayOrigin: mouse;"
         on-marker-found="onMarkerFound"
         on-marker-lost="onMarkerLost"
       >
@@ -46,12 +53,12 @@
           position="0 0 0"
           scale="0.5 0.5 0.5"
           visible="false"
-          raycaster="objects: .clickable"
-          cursor="fuse: true; fuseTimeout: 1000"
           class="clickable"
+          rotation="-90 0 0"
+          gesture-handler
           onclick="window.ARApp.showPanel()"
         ></a-image>
-      </a-nft>
+      </a-marker>
 
       <!-- Панелька (скрыта изначально) -->
       <a-entity
