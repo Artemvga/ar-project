@@ -202,4 +202,44 @@ h1 {
     .camera-error.active {
         display: block;
     }
+        /* Стили для модальных окон разрешений */
+    #permission-modal, #permission-instructions {
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    /* Стили для кнопок в модальных окнах */
+    #permission-modal button, #permission-instructions button {
+        transition: all 0.2s ease;
+        font-weight: 600;
+    }
+
+    #permission-modal button:hover, #permission-instructions button:hover {
+        transform: translateY(-2px);
+    }
+
+    #permission-modal button:active, #permission-instructions button:active {
+        transform: translateY(0);
+    }
+
+    /* Адаптация модальных окон для мобильных */
+    @media (max-width: 768px) {
+        #permission-modal > div, #permission-instructions > div {
+            max-width: 90% !important;
+            padding: 15px !important;
+        }
+        
+        #permission-modal h2, #permission-instructions h2 {
+            font-size: 1.3rem !important;
+        }
+        
+        #permission-modal button, #permission-instructions button {
+            padding: 10px 20px !important;
+            font-size: 1rem !important;
+        }
+    }
 }
