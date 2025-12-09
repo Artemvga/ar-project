@@ -1,81 +1,103 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- Отключение кеширования -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <title>AR Project</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+    <link rel="stylesheet" href="css/style.css?v=1.0.1">
+</head>
+<body>
+    <!-- Сцена 1: Стартовый экран -->
+    <div id="scene1">
+        <button class="start-button" id="startButton">Start AR</button>
+    </div>
 
-body {
-  font-family: Arial, sans-serif;
-  background: #000;
-  overflow: hidden;
-  touch-action: none;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
+    <!-- Индикатор загрузки -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div>Загрузка камеры...</div>
+    </div>
 
-.scene {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: #000;
-  z-index: 1000;
-}
+    <!-- Сцена 2: AR -->
+    <div id="scene2">
+        <a-scene
+            class="ar-scene"
+            embedded
+            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+            renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
+            vr-mode-ui="enabled: false"
+            gesture-detector
+            loading-screen="enabled: false">
+            
+            <!-- Ассеты -->
+            <a-assets>
+                <img id="flag" src="assets/sprites/Flag.png" crossorigin="anonymous">
+            </a-assets>
 
-.center-button {
-  text-align: center;
-}
+            <!-- Маркер -->
+            <a-marker
+                type="pattern"
+                preset="custom"
+                url="assets/markers/MarkerVacnecov.patt"
+                emitevents="true"
+                id="markerVacnecov">
+                
+                <!-- Спрайт флага по центру маркера с кликабельностью -->
+                <a-image
+                    src="#flag"
+                    position="0 0 0"
+                    rotation="-90 0 0"
+                    scale="1 1 1"
+                    transparent="true"
+                    alpha-test="0.5"
+                    material="shader: flat; side: double"
+                    class="clickable"
+                    id="flagSprite">
+                </a-image>
+            </a-marker>
 
-#startArButton {
-  padding: 16px 32px;
-  font-size: 18px;
-  background: #007AFF;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-  touch-action: manipulation;
-}
+            <!-- Камера -->
+            <a-entity camera look-controls="enabled: false"></a-entity>
+        </a-scene>
 
-#startArButton:hover,
-#startArButton:active {
-  background: #0056b3;
-}
+        <!-- Инструкция -->
+        <div class="instruction" id="instruction">
+            Наведите камеру на маркер
+        </div>
 
-/* Для панели */
-#infoPanel {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 9999;
-  cursor: pointer;
-  pointer-events: auto;
-}
+        <!-- Информационная панель -->
+        <div class="info-panel" id="infoPanel">
+            <div class="info-panel-header">
+                <h2>Информация о флаге</h2>
+                <button class="close-button" id="closePanel">&times;</button>
+            </div>
+            <div class="info-panel-content">
+                <p class="info-text">
+                    Здесь находится информация о флаге Вацнецова. 
+                    Вы можете добавить любой текст, описание, историческую справку 
+                    или другую интересную информацию об этом объекте.
+                </p>
+                <p class="info-text">
+                    Этот флаг имеет особое значение и символизирует важные события. 
+                    Добавьте сюда подробности, которые хотите показать пользователям.
+                </p>
+                <button class="back-button" id="backButton">Назад</button>
+            </div>
+        </div>
 
-/* Для флага */
-#flagSprite {
-  cursor: pointer;
-  pointer-events: auto;
-}
+        <!-- Оверлей для закрытия панели -->
+        <div class="panel-overlay" id="panelOverlay"></div>
+    </div>
 
-/* Убираем мигание при касании на iOS */
-a-entity.clickable {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Для мобильных устройств */
-@media (max-width: 768px) {
-  #startArButton {
-    padding: 14px 28px;
-    font-size: 16px;
-  }
-}
+    <script src="js/main.js?v=1.0.1"></script>
+</body>
+</html>
