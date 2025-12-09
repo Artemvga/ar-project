@@ -152,10 +152,12 @@ body {
     z-index: 200;
     transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
+    display: none;
 }
 
 .info-panel.active {
     bottom: 0;
+    display: block;
 }
 
 .info-panel-header {

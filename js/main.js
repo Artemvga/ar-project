@@ -9,6 +9,7 @@ const instruction = document.getElementById('instruction');
 const infoPanel = document.getElementById('infoPanel');
 const panelOverlay = document.getElementById('panelOverlay');
 const closePanel = document.getElementById('closePanel');
+const backButton = document.getElementById('backButton');
 
 let arScene = null;
 let flagSprite = null;
@@ -121,47 +122,12 @@ function closeInfoPanel() {
 // Обработчики закрытия панели
 closePanel.addEventListener('click', closeInfoPanel);
 panelOverlay.addEventListener('click', closeInfoPanel);
+backButton.addEventListener('click', closeInfoPanel);
 
 // ============================================
 // ОБРАБОТКА КЛИКОВ НА КНОПКИ В ПАНЕЛИ
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    const actionButtons = document.querySelectorAll('.action-button');
-    
-    actionButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            if (button.classList.contains('primary')) {
-                console.log('Узнать больше');
-                // Здесь можно добавить логику для перехода на другую страницу
-                // или загрузки дополнительной информации
-            } else if (button.classList.contains('secondary')) {
-                console.log('Поделиться');
-                // Здесь можно добавить логику для шаринга
-                shareContent();
-            }
-        });
-    });
-});
-
-// ============================================
-// ФУНКЦИЯ ШАРИНГА
-// ============================================
-function shareContent() {
-    if (navigator.share) {
-        navigator.share({
-            title: 'AR Проект',
-            text: 'Посмотрите на этот интересный AR объект!',
-            url: window.location.href
-        }).then(() => {
-            console.log('Успешно поделились');
-        }).catch((error) => {
-            console.log('Ошибка при шаринге', error);
-        });
-    } else {
-        // Фоллбэк для браузеров без поддержки Web Share API
-        alert('Функция шаринга недоступна в вашем браузере');
-    }
-}
+// Удалено - кнопки убраны из интерфейса
 
 // ============================================
 // ПРЕДОТВРАЩЕНИЕ МАСШТАБИРОВАНИЯ НА iOS
