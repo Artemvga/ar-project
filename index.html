@@ -1,74 +1,58 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    
-    <!-- Отключение кеширования -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    
-    <title>AR Project</title>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
-    <link rel="stylesheet" href="css/style.css?v=1.0.1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>AR — Marker -> Flag (минимум)</title>
+
+  <!-- A-Frame и AR.js (стабильные CDN) -->
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 </head>
 <body>
-    <!-- Сцена 1: Стартовый экран -->
-    <div id="scene1">
-        <button class="start-button" id="startButton">Start AR</button>
-    </div>
 
-    <!-- Индикатор загрузки -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div>Загрузка камеры...</div>
-    </div>
+  <!-- 1) Меню (минимально) -->
+  <div id="menu">
+    <button id="btnStart">Start AR</button>
+    <button id="btnStop">Stop AR</button>
+    <span id="status">stopped</span>
+  </div>
 
-    <!-- Сцена 2: AR -->
-    <div id="scene2">
-        <a-scene
-            class="ar-scene"
-            embedded
-            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-            renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
-            vr-mode-ui="enabled: false"
-            gesture-detector
-            loading-screen="enabled: false">
-            
-            <!-- Ассеты -->
-            <a-assets>
-                <img id="flag" src="assets/sprites/Flag.png" crossorigin="anonymous">
-            </a-assets>
+  <!-- 2) AR сцена. embedded, прозрачный рендерер -->
+  <div id="arContainer" style="display:none;">
+    <a-scene
+      id="arScene"
+      embedded
+      vr-mode-ui="enabled: false"
+      renderer="alpha: true; antialias: true; logarithmicDepthBuffer: true"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+      loading-screen="enabled: false"
+    >
+      <a-assets>
+        <!-- Флаг (положи файл по пути assets/sprites/Flag.png) -->
+        <img id="flagImg" src="assets/sprites/Flag.png" crossorigin="anonymous">
+      </a-assets>
 
-            <!-- Маркер -->
-            <a-marker
-                type="pattern"
-                preset="custom"
-                url="assets/markers/MarkerVacnecov.patt"
-                emitevents="true"
-                id="markerVacnecov">
-                
-                <!-- Спрайт флага по центру маркера -->
-                <a-image
-                    src="#flag"
-                    position="0 0 0"
-                    rotation="-90 0 0"
-                    scale="1 1 1"
-                    transparent="true"
-                    alpha-test="0.5"
-                    material="shader: flat; side: double"
-                    id="flagSprite">
-                </a-image>
-            </a-marker>
+      <!-- Маркер с нужным .patt (положи файл по пути assets/markers/MarkerVacnecov.patt) -->
+      <a-marker id="markerVacnecov" type="pattern" url="assets/markers/MarkerVacnecov.patt" emitevents="true">
+        <!-- Флаг (по центру маркера). visible=false до обнаружения маркера -->
+        <a-image id="flag" src="#flagImg" position="0 0 0" rotation="-90 0 0" scale="1 1 1" visible="false" transparent="true" alpha-test="0.5"></a-image>
+      </a-marker>
 
-            <!-- Камера -->
-            <a-entity camera look-controls="enabled: false"></a-entity>
-        </a-scene>
-    </div>
+      <!-- Камера: без look-controls, нужен для взаимодействия -->
+      <a-entity camera></a-entity>
+    </a-scene>
+  </div>
 
-    <script src="js/main.js?v=1.0.1"></script>
+  <!-- 3) Информационная панель — простая div (открывается только по клику на флаг) -->
+  <div id="infoPanel" style="display:none;">
+    <h2>Информация о флаге</h2>
+    <p>Это простая панель — открывается только после нажатия на картинку флага.</p>
+    <button id="closeInfo">Close</button>
+  </div>
+
+  <!-- Скрипт -->
+  <script src="js/main.js"></script>
 </body>
 </html>
