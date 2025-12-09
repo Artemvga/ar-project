@@ -1,249 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>AR Проект</title>
     
-    <script src="https://aframe.io/releases/1.0.4/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <!-- Отключение кеширования -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-        }
-        
-        body {
-            background: black;
-            overflow: hidden;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
-        
-        /* Начальный экран */
-        #start-screen {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            padding: 20px;
-        }
-        
-        #start-screen h1 {
-            color: #333;
-            font-size: 28px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        #start-screen p {
-            color: #666;
-            font-size: 16px;
-            text-align: center;
-            margin-bottom: 40px;
-            max-width: 300px;
-        }
-        
-        /* Кнопки */
-        .btn {
-            background: #007AFF;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            margin: 10px;
-            width: 200px;
-        }
-        
-        #back-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            background: #FF3B30;
-            z-index: 1001;
-            width: auto;
-        }
-        
-        /* AR сцена */
-        #ar-scene {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-        }
-        
-        #ar-scene.active {
-            display: block;
-        }
-    </style>
+    <title>AR Project</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+    <link rel="stylesheet" href="css/style.css?v=1.0.1">
 </head>
 <body>
-    <!-- Начальный экран -->
-    <div id="start-screen">
-        <h1>AR Проект</h1>
-        <p>Наведите камеру на маркер MarkerVacnecov.patt</p>
-        <button id="start-btn" class="btn">Начать</button>
-    </div>
-    
-    <!-- Кнопка назад (скрыта на начальном экране) -->
-    <button id="back-btn" class="btn" style="display: none;">Назад</button>
-    
-    <!-- AR сцена -->
-    <div id="ar-scene">
-        <a-scene 
-            vr-mode-ui="enabled: false"
-            embedded
-            arjs="sourceType: webcam; 
-                  debugUIEnabled: false; 
-                  detectionMode: mono_and_matrix;
-                  matrixCodeType: 3x3;
-                  cameraParametersUrl: '';
-                  maxDetectionRate: 30;"
-            renderer="antialias: true; alpha: true;"
-            gesture-detector
-        >
-            <!-- Маркер -->
-            <a-marker 
-                type="pattern"
-                url="markers/MarkerVacnecov.patt"
-                raycaster="objects: .clickable"
-                cursor="rayOrigin: mouse"
-            >
-                <!-- Флаг в 4 раза меньше маркера -->
-                <a-image 
-                    src="images/Flag.png"
-                    position="0 0 0"
-                    scale="0.25 0.25 0.25"
-                    rotation="-90 0 0"
-                    class="clickable"
-                    gesture-handler
-                    pinch-scale
-                ></a-image>
-            </a-marker>
-            
-            <!-- Камера - ВАЖНО: именно так! -->
-            <a-entity camera></a-entity>
-        </a-scene>
+    <!-- Сцена 1: Стартовый экран -->
+    <div id="scene1">
+        <button class="start-button" id="startButton">Start AR</button>
     </div>
 
-    <script>
-        // Элементы
-        const startScreen = document.getElementById('start-screen');
-        const startBtn = document.getElementById('start-btn');
-        const backBtn = document.getElementById('back-btn');
-        const arScene = document.getElementById('ar-scene');
-        const aframeScene = document.querySelector('a-scene');
-        
-        // 1. Показываем начальный экран
-        startScreen.style.display = 'flex';
-        arScene.style.display = 'none';
-        backBtn.style.display = 'none';
-        
-        // 2. Нажатие "Начать" - включаем AR
-        startBtn.addEventListener('click', function() {
-            console.log('Запускаем AR...');
+    <!-- Индикатор загрузки -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div>Загрузка камеры...</div>
+    </div>
+
+    <!-- Сцена 2: AR -->
+    <div id="scene2">
+        <a-scene
+            class="ar-scene"
+            embedded
+            arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+            renderer="logarithmicDepthBuffer: true; precision: medium; antialias: true;"
+            vr-mode-ui="enabled: false"
+            gesture-detector
+            loading-screen="enabled: false">
             
-            // Прячем начальный экран
-            startScreen.style.display = 'none';
-            
-            // Показываем AR сцену
-            arScene.style.display = 'block';
-            arScene.classList.add('active');
-            
-            // Показываем кнопку назад
-            backBtn.style.display = 'block';
-            
-            // Принудительно запускаем сцену
-            setTimeout(() => {
-                if (aframeScene) {
-                    console.log('Активируем A-Frame сцену');
-                    aframeScene.setAttribute('arjs', 'sourceType: webcam; debugUIEnabled: false;');
-                    
-                    // Для iOS Safari - специальная активация
-                    if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-                        console.log('iOS устройство - активируем камеру');
-                        const camera = aframeScene.camera;
-                        if (camera && camera.el) {
-                            camera.el.setAttribute('camera', 'active', true);
-                        }
-                    }
-                }
-            }, 100);
-        });
-        
-        // 3. Нажатие "Назад" - возврат на начальный экран
-        backBtn.addEventListener('click', function() {
-            console.log('Возвращаемся...');
-            
-            // Показываем начальный экран
-            startScreen.style.display = 'flex';
-            
-            // Прячем AR сцену
-            arScene.style.display = 'none';
-            arScene.classList.remove('active');
-            
-            // Прячем кнопку назад
-            backBtn.style.display = 'none';
-            
-            // Останавливаем камеру если возможно
-            if (aframeScene) {
-                const cameraEl = aframeScene.querySelector('[camera]');
-                if (cameraEl) {
-                    cameraEl.setAttribute('camera', 'active', false);
-                }
-            }
-        });
-        
-        // 4. Предотвращаем случайные жесты на мобильных
-        document.addEventListener('touchmove', function(e) {
-            if (e.touches.length > 1) {
-                e.preventDefault();
-            }
-        }, { passive: false });
-        
-        // 5. При загрузке страницы сразу готовимся к AR
-        window.addEventListener('load', function() {
-            console.log('Страница загружена');
-            console.log('Устройство:', navigator.userAgent);
-            
-            // Предзагрузка ресурсов
-            const marker = new Image();
-            marker.src = 'markers/MarkerVacnecov.patt';
-            
-            const flag = new Image();
-            flag.src = 'images/Flag.png';
-            
-            console.log('Ресурсы загружены');
-        });
-        
-        // 6. При закрытии/скрытии страницы останавливаем все
-        window.addEventListener('beforeunload', function() {
-            if (aframeScene) {
-                aframeScene.emit('leave-vr');
-            }
-        });
-        
-        // 7. Принудительный запуск AR (для отладки)
-        window.forceAR = function() {
-            startBtn.click();
-        };
-    </script>
+            <!-- Ассеты -->
+            <a-assets>
+                <img id="flag" src="assets/sprites/Flag.png" crossorigin="anonymous">
+            </a-assets>
+
+            <!-- Маркер -->
+            <a-marker
+                type="pattern"
+                preset="custom"
+                url="assets/markers/MarkerVacnecov.patt"
+                emitevents="true"
+                id="markerVacnecov">
+                
+                <!-- Спрайт флага по центру маркера с кликабельностью -->
+                <a-image
+                    src="#flag"
+                    position="0 0 0"
+                    rotation="-90 0 0"
+                    scale="1 1 1"
+                    transparent="true"
+                    alpha-test="0.5"
+                    material="shader: flat; side: double"
+                    class="clickable"
+                    id="flagSprite">
+                </a-image>
+            </a-marker>
+
+            <!-- Камера -->
+            <a-entity camera look-controls="enabled: false"></a-entity>
+        </a-scene>
+
+        <!-- Инструкция -->
+        <div class="instruction" id="instruction">
+            Наведите камеру на маркер
+        </div>
+
+        <!-- Информационная панель -->
+        <div class="info-panel" id="infoPanel">
+            <div class="info-panel-header">
+                <h2>Информация о флаге</h2>
+                <button class="close-button" id="closePanel">&times;</button>
+            </div>
+            <div class="info-panel-content">
+                <p class="info-text">
+                    Здесь находится информация о флаге Вацнецова. 
+                    Вы можете добавить любой текст, описание, историческую справку 
+                    или другую интересную информацию об этом объекте.
+                </p>
+                <p class="info-text">
+                    Этот флаг имеет особое значение и символизирует важные события. 
+                    Добавьте сюда подробности, которые хотите показать пользователям.
+                </p>
+                <button class="back-button" id="backButton">Назад</button>
+            </div>
+        </div>
+
+        <!-- Оверлей для закрытия панели -->
+        <div class="panel-overlay" id="panelOverlay"></div>
+    </div>
+
+    <script src="js/main.js?v=1.0.1"></script>
 </body>
 </html>
