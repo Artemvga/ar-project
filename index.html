@@ -51,7 +51,7 @@
                 emitevents="true"
                 id="markerVacnecov">
                 
-                <!-- Спрайт флага по центру маркера с кликабельностью -->
+                <!-- Спрайт флага по центру маркера -->
                 <a-image
                     src="#flag"
                     position="0 0 0"
@@ -60,7 +60,6 @@
                     transparent="true"
                     alpha-test="0.5"
                     material="shader: flat; side: double"
-                    class="clickable"
                     id="flagSprite">
                 </a-image>
             </a-marker>
@@ -68,11 +67,6 @@
             <!-- Камера -->
             <a-entity camera look-controls="enabled: false"></a-entity>
         </a-scene>
-
-        <!-- Инструкция -->
-        <div class="instruction" id="instruction">
-            Наведите камеру на маркер
-        </div>
     </div>
 
     <script src="js/main.js?v=1.0.1"></script>
